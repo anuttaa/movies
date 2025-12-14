@@ -4,7 +4,9 @@ import com.example.movies.services.EmailService;
 import jakarta.mail.Session;
 import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -19,6 +21,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(MockitoExtension.class)
 public class EmailServiceUnitTests {
 
@@ -30,6 +33,11 @@ public class EmailServiceUnitTests {
 
     @Mock
     private MessageSource messageSource;
+
+    @BeforeEach
+    void setUpService() {
+        emailService = new EmailService(mailSender, messageSource);
+    }
 
     @ParameterizedTest
     @MethodSource("sendEmail")

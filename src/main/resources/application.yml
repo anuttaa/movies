@@ -48,4 +48,4 @@ application:
 logging:
   level:
     ROOT: INFO              # Suppresses debug logs from other libraries
-    com.coco.jumboomovies: DEBUG # Enables debug logs only for your application
+    com.example.movies: DEBUG # Enables debug logs only for your application

@@ -32,13 +32,18 @@ public class EmailService {
 
     public void sendEmail(String to, String token, Locale locale) {
 
-        String confirmationLink = "http://localhost:8080/movies/auth/confirm?token=" + token;
-        String subject = messageSource.getMessage(EMAIL_SUBJECT, null, locale);
-        String bodyTemplate = messageSource.getMessage(EMAIL_BODY, null, locale);
-        String body = String.format(bodyTemplate, confirmationLink);
-
         logger.info("Starting email service");
         try {
+            String confirmationLink = "http://localhost:8080/movies/auth/confirm?token=" + token;
+            String subject = messageSource.getMessage(EMAIL_SUBJECT, null, locale);
+            String bodyTemplate = messageSource.getMessage(EMAIL_BODY, null, locale);
+            if (subject == null) {
+                subject = "Confirm Your Email";
+            }
+            if (bodyTemplate == null) {
+                bodyTemplate = "<p>Please click the following link to confirm your email:</p><a href=\"%s\">Confirm Your Email</a>";
+            }
+            String body = String.format(bodyTemplate, confirmationLink);
             MimeMessage mimeMessage = this.mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
             helper.setTo(to);

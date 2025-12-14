@@ -6,8 +6,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = "com.example.movies.repositories")
-public class JumbooMoviesApplication {
+public class MoviesApplication {
   public static void main(String[] args) {
-    SpringApplication.run(JumbooMoviesApplication.class, args);
+    SpringApplication.run(MoviesApplication.class, args);
   }
 }

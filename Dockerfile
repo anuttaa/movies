@@ -1,6 +1,6 @@
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /application
-ARG JAR_FILE=target/JumbooMovies-0.0.1-SNAPSHOT.jar
+ARG JAR_FILE=target/Movies-0.0.1-SNAPSHOT.jar
 COPY ${JAR_FILE} application.jar
 COPY .env .env
 RUN java -Djarmode=layertools -jar application.jar extract

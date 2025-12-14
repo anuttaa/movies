@@ -11,7 +11,7 @@
   </parent>
 
   <groupId>com.coco</groupId>
-  <artifactId>JumbooMovies</artifactId>
+  <artifactId>Movies</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>JumbooMovies</name>
   <description>JumbooMovies</description>

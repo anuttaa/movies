@@ -1,0 +1,51 @@
+spring:
+  datasource:
+    driverClassName: org.postgresql.Driver
+    url: ${MOVIES_SPRING_DATASOURCE_URL}
+    username: ${MOVIES_POSTGRES_USER}
+    password: ${MOVIES_POSTGRES_PASSWORD}
+    
+
+  mail:
+    password: ${MAIL_PASSWORD}
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        boot:
+          allow_jdbc_metadata_access: false
+        show_sql: false
+    hibernate:
+      ddl-auto: none
+
+  application:
+    name: movies-service
+
+  web:
+    resources:
+      static-locations: file:uploads/ # Adds a static location for uploaded files
+
+  servlet:
+    multipart:
+      max-file-size: 10MB   # Set maximum file size for uploads
+      max-request-size: 10MB # Set maximum request size for uploads
+      enabled: true
+
+  liquibase:
+    clear-checksums: true
+
+server:
+  port: 8080
+
+application:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET}
+      access-token-time: 3600000   # 1 hour
+      refresh-token-time: 604800000  # 7 days
+
+logging:
+  level:
+    ROOT: INFO              # Suppresses debug logs from other libraries
+    com.coco.jumboomovies: DEBUG # Enables debug logs only for your application

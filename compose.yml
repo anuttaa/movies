@@ -1,0 +1,56 @@
+version: '3'
+
+services:
+  movies_database:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${MOVIES_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${MOVIES_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${MOVIES_POSTGRES_DB}
+    volumes:
+      - db_movies:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    networks:
+      - backend
+
+  movies-service:
+    image: jumboomovies:v4
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://movies_database:5432/${MOVIES_POSTGRES_DB}
+      - SPRING_DATASOURCE_USERNAME=${MOVIES_POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${MOVIES_POSTGRES_PASSWORD}
+    networks:
+      - backend
+    depends_on:
+      movies_database:
+        condition: service_started
+
+
+  liquibase-migrations:
+    image: liquibase/liquibase:4.25
+    command:
+      - --changelog-file=classpath:db/changelog/db.changelog-master.yaml
+      - --driver=org.postgresql.Driver
+      - --url=${MOVIES_SPRING_DATASOURCE_URL}
+      - --username=${MOVIES_POSTGRES_USER}
+      - --password=${MOVIES_POSTGRES_PASSWORD}
+      - update
+    ports:
+      - "8061:8061"
+    depends_on:
+      movies_database:
+        condition: service_started
+    volumes:
+      - migrations:/liquibase/changelog
+    networks:
+      - backend
+
+networks:
+  backend:
+
+volumes:
+  db_movies:
+  migrations:

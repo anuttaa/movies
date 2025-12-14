@@ -32,7 +32,7 @@ public class EmailService {
 
     public void sendEmail(String to, String token, Locale locale) {
 
-        String confirmationLink = "http://localhost:8080/jumboo_movies/auth/confirm?token=" + token;
+        String confirmationLink = "http://localhost:8080/movies/auth/confirm?token=" + token;
         String subject = messageSource.getMessage(EMAIL_SUBJECT, null, locale);
         String bodyTemplate = messageSource.getMessage(EMAIL_BODY, null, locale);
         String body = String.format(bodyTemplate, confirmationLink);

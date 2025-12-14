@@ -20,14 +20,14 @@ public class CustomLogoutHandler implements LogoutHandler {
 
         // Clear the access token cookie
         Cookie accessTokenCookie = new Cookie("accessToken", null);
-        accessTokenCookie.setPath("/jumboo_movies");  // Must match the path used during login
+        accessTokenCookie.setPath("/movies");
         accessTokenCookie.setHttpOnly(true);
         accessTokenCookie.setMaxAge(0); // Expire immediately
         response.addCookie(accessTokenCookie);
 
         // Clear the refresh token cookie (if used)
         Cookie refreshTokenCookie = new Cookie("refreshToken", null);
-        refreshTokenCookie.setPath("/jumboo_movies");  // Must match the path used during login
+        refreshTokenCookie.setPath("/movies");
         refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setMaxAge(0); // Expire immediately
         response.addCookie(refreshTokenCookie);

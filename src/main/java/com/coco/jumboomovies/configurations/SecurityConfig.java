@@ -46,8 +46,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         authorize -> authorize
                                 .requestMatchers(HttpMethod.GET).permitAll()
-                                .requestMatchers("/jumboo_movies/users/edit").permitAll()
-                                .requestMatchers("/jumboo_movies/auth/**", "/swagger-ui/**").permitAll()
+                                .requestMatchers("/movies/users/edit").permitAll()
+                                .requestMatchers("/movies/auth/**", "/swagger-ui/**").permitAll()
                                 .anyRequest().authenticated()
                 ).userDetailsService(customUserDetailsService)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -57,7 +57,7 @@ public class SecurityConfig {
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class) //AuthorizationFilter
-                .logout(l -> l.logoutUrl("/jumboo_movies/logout")
+                .logout(l -> l.logoutUrl("/movies/logout")
                         .addLogoutHandler(logoutHandler)
                         .logoutSuccessHandler(logoutSuccessHandler())
                 );

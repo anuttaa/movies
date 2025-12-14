@@ -79,7 +79,7 @@ public class EmailServiceUnitTests {
     void testMimeMessageCreation(String to, String subject, Locale locale, String bodyTemplate) throws Exception {
         // Arrange
         String token = UUID.randomUUID().toString();
-        String confirmationLink = "http://localhost:8080/jumboo_movies/auth/confirm?token=" + token;
+        String confirmationLink = "http://localhost:8080/movies/auth/confirm?token=" + token;
         String body = String.format(bodyTemplate, confirmationLink);
 
         when(messageSource.getMessage("email.confirmation.subject", null, locale)).thenReturn(subject);

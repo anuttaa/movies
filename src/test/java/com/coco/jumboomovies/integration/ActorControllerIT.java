@@ -68,7 +68,7 @@ public class ActorControllerIT {
         given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/jumboo_movies/actors")
+                .get("/movies/actors")
                 .then()
                 .statusCode(200)
                 .body(".", hasSize(20));
@@ -79,7 +79,7 @@ public class ActorControllerIT {
         given()
                 .contentType(ContentType.JSON)
                 .when()
-                .get("/jumboo_movies/awards")
+                .get("/movies/awards")
                 .then()
                 .statusCode(200)
                 .body(".", hasSize(17));

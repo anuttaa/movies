@@ -64,7 +64,7 @@ public class UserControllerTests {
         given(userService.findUserById(1)).willReturn(userDto);
         //when
         MockHttpServletResponse response = mockMvc.perform(
-                        get("/jumboo_movies/users/1")
+                        get("/movies/users/1")
                                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
@@ -85,7 +85,7 @@ public class UserControllerTests {
 
         // When
         MockHttpServletResponse response = mockMvc.perform(
-                        get("/jumboo_movies/users/" + nonExistentActorId)
+                        get("/movies/users/" + nonExistentActorId)
                                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
@@ -100,7 +100,7 @@ public class UserControllerTests {
         given(userService.createUser(any(UserDto.class))).willReturn(userDto);
 
         MockHttpServletResponse response = mockMvc.perform(
-                post("/jumboo_movies/users/add")
+                post("/movies/users/add")
                         .accept(MediaType.APPLICATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userDtoJson.write(userDto).getJson())

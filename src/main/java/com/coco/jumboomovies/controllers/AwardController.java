@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/jumboo_movies/awards")
+@RequestMapping("/movies/awards")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:3000")
 public class AwardController {

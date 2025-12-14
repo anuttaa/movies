@@ -84,7 +84,7 @@ public class AuthenticationService {
     // Helper method to add a JWT token to a cookie
     private void addTokenToCookie(String cookieName, String token, HttpServletResponse response) {
         Cookie cookie = new Cookie(cookieName, token);
-        cookie.setPath("/jumboo_movies");
+        cookie.setPath("/movies");
         cookie.setHttpOnly(true);  // Prevent JavaScript access
         cookie.setMaxAge(-1);
         cookie.setSecure(true);

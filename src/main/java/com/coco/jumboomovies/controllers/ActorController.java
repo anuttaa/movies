@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/jumboo_movies/actors")
+@RequestMapping("/movies/actors")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:3000")
 public class ActorController {

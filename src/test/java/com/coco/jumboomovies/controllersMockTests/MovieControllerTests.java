@@ -75,7 +75,7 @@ public class MovieControllerTests {
 
         //when
         MockHttpServletResponse response = mockMvc.perform(
-                        get("/jumboo_movies/movies/1")
+                        get("/movies/movies/1")
                                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
@@ -95,7 +95,7 @@ public class MovieControllerTests {
 
         // when
         MockHttpServletResponse response = mockMvc.perform(
-                        get("/jumboo_movies/movies/" + nonExistentId)
+                        get("/movies/movies/" + nonExistentId)
                                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
@@ -120,7 +120,7 @@ public class MovieControllerTests {
 
         //when
         MockHttpServletResponse response = mockMvc.perform(
-                        get("/jumboo_movies/movies/2/actors")
+                        get("/movies/movies/2/actors")
                                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 

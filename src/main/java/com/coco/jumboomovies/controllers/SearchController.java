@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/jumboo_movies/search")
+@RequestMapping("/movies/search")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:3000")
 public class SearchController {

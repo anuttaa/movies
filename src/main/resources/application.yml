@@ -1,4 +1,10 @@
 spring:
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/init/schema.sql
+      data-locations: classpath:db/init/data.sql
+      continue-on-error: true
   datasource:
     driverClassName: org.postgresql.Driver
     url: ${MOVIES_SPRING_DATASOURCE_URL}
@@ -33,7 +39,7 @@ spring:
       enabled: true
 
   liquibase:
-    clear-checksums: true
+    enabled: false
 
 server:
   port: 8080

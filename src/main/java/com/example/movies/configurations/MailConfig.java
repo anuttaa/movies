@@ -11,24 +11,32 @@ import java.util.Properties;
 @Configuration
 public class MailConfig {
 
+    @Value("${spring.mail.host}")
+    private String host;
+
+    @Value("${spring.mail.port}")
+    private int port;
+
+    @Value("${spring.mail.username}")
+    private String username;
+
     @Value("${spring.mail.password}")
     private String password;
 
     @Bean
     public JavaMailSender mailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-        mailSender.setHost("smtp.gmail.com"); // Use your SMTP server (for Gmail, it's smtp.gmail.com)
-        mailSender.setPort(587); // The port for STARTTLS is 587
-        mailSender.setUsername("telpuknikifor05@gmail.com"); // Replace with your email
-        mailSender.setPassword(password); // Replace with your email password
+        mailSender.setHost(host);
+        mailSender.setPort(port);
+        mailSender.setUsername(username);
+        mailSender.setPassword(password);
 
-        // Set properties for SMTP (these are important for Gmail)
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
-        props.put("mail.smtp.auth", "true"); // Enable SMTP authentication
-        props.put("mail.smtp.starttls.enable", "true"); // Enable STARTTLS
-        props.put("mail.smtp.ssl.protocols", "TLSv1.2"); // Use TLS 1.2
-        props.put("mail.debug", "false"); // Enable debugging to see more details in logs
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+        props.put("mail.debug", "false");
 
         return mailSender;
     }

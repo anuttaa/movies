@@ -33,7 +33,6 @@ public class ReviewController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('READ')")
     public ResponseEntity<ReviewDto> createReview(@RequestBody ReviewDto reviewDto) {
         ReviewDto createdReview = reviewService.createReview(reviewDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdReview);

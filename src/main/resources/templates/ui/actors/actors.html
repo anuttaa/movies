@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Aктёры - Кинотека</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div th:if="${actorId == null}">
+            <!-- Главная страница актёров -->
+            <div class="page-header">
+                <h1><i class="fas fa-user"></i> Актёры</h1>
+                <p class="page-subtitle">База данных актёров и их фильмографии</p>
+            </div>
+
+            <!-- Поиск актёров -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2><i class="fas fa-search"></i> Поиск актёров</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row" style="display: flex; gap: 1rem; align-items: center;">
+                        <div class="col" style="flex: 1;">
+                            <input type="text" 
+                                   id="actorSearch" 
+                                   class="form-control" 
+                                   placeholder="Введите имя актёра...">
+                        </div>
+                        <div class="col-auto">
+                            <button id="actorSearchBtn" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Искать
+                            </button>
+                            <button id="actorRefreshBtn" class="btn btn-outline">
+                                <i class="fas fa-redo"></i> Обновить
+                            </button>
+                            <button class="btn btn-success" onclick="showCreateForm()">
+                                <i class="fas fa-plus"></i> Добавить актёра
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Список актёров -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2><i class="fas fa-list"></i> Список актёров</h2>
+                </div>
+                <div class="card-body">
+                    <div class="loading" id="actorsLoading">
+                        <div class="spinner"></div>
+                    </div>
+                    <div class="card-grid" id="actorsGrid"></div>
+                </div>
+            </div>
+
+            <!-- Форма создания актёра -->
+            <div class="card mb-4" id="createForm" style="display: none;">
+                <div class="card-header">
+                    <h2><i class="fas fa-plus-circle"></i> Добавить нового актёра</h2>
+                </div>
+                <div class="card-body">
+                    <form id="actorCreateForm" onsubmit="createActor(event)">
+                        <div class="row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Имя актёра *</label>
+                                <input type="text" name="name" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Дата рождения</label>
+                                <input type="date" name="birthday" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Биография</label>
+                            <textarea name="biography" class="form-control" rows="4" placeholder="Расскажите о карьере актёра..."></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Сохранить актёра
+                            </button>
+                            <button type="button" class="btn btn-outline" onclick="hideCreateForm()">
+                                <i class="fas fa-times"></i> Отмена
+                            </button>
+                        </div>
+                    </form>
+                    <div id="actorCreateResult" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Страница деталей актёра -->
+        <div th:if="${actorId != null}">
+            <div class="page-header">
+                <h1><i class="fas fa-user"></i> Детали актёра</h1>
+                <a th:href="@{/ui/actors}" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i> Назад к списку
+                </a>
+            </div>
+
+            <!-- Информация об актёре -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="loading" id="actorLoading">
+                        <div class="spinner"></div>
+                    </div>
+                    <div id="actorDetail"></div>
+                </div>
+            </div>
+
+            <div class="row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                <!-- Фильмография -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-film"></i> Фильмография</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="actorRoles" class="roles-list"></div>
+                    </div>
+                </div>
+
+                <!-- Награды -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-award"></i> Награды</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="actorAwards" class="awards-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Панель управления -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-edit"></i> Управление актёром</h2>
+                </div>
+                <div class="card-body">
+                    <div class="tabs">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" onclick="showTab('bio')">Биография</button>
+                            <button class="tab-btn" onclick="showTab('awards')">Награды</button>
+                            <button class="tab-btn" onclick="showTab('discography')">Фильмография</button>
+                            <button class="tab-btn" onclick="showTab('danger')">Удаление</button>
+                        </div>
+
+                        <div class="tab-content">
+                            <!-- Редактирование базовой информации -->
+                            <div id="tab-bio" class="tab-pane active">
+                                <form id="actorBioForm" onsubmit="updateBiography(event)">
+                                    <div class="row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                        <div class="form-group">
+                                            <label class="form-label">Имя актёра</label>
+                                            <input type="text" name="name" class="form-control" placeholder="Введите имя">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">Дата рождения</label>
+                                            <input type="date" name="birthday" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Биография</label>
+                                        <textarea name="biography" class="form-control" rows="6" 
+                                                  placeholder="Обновите биографию актёра..."></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save"></i> Сохранить изменения
+                                    </button>
+                                </form>
+                                <div id="actorBioResult" class="mt-3"></div>
+                            </div>
+
+                            <!-- Управление наградами -->
+                            <div id="tab-awards" class="tab-pane">
+                                <form id="actorAwardsForm" onsubmit="updateAwards(event)">
+                                    <div class="form-group">
+                                        <label class="form-label">Название награды</label>
+                                        <input type="text" name="awardName" class="form-control" placeholder="Оскар">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Тип награды</label>
+                                        <input type="text" name="awardType" class="form-control" placeholder="Academy">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Описание</label>
+                                        <input type="text" name="awardDescription" class="form-control" placeholder="Лучшая мужская роль">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Дата вручения</label>
+                                        <input type="date" name="awardYear" class="form-control">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-trophy"></i> Обновить награды
+                                    </button>
+                                </form>
+                                <div id="actorAwardsResult" class="mt-3"></div>
+                            </div>
+
+                            <!-- Управление фильмографией -->
+                            <div id="tab-discography" class="tab-pane">
+                                <form id="actorDiscographyForm" onsubmit="updateDiscography(event)">
+                                    <div class="form-group">
+                                        <label class="form-label">Название фильма</label>
+                                        <input type="text" name="movieName" class="form-control" placeholder="Название фильма">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Год</label>
+                                        <input type="number" name="movieYear" class="form-control" min="1888" max="2100" placeholder="2020">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Режиссёр</label>
+                                        <input type="text" name="directorName" class="form-control" placeholder="Имя режиссёра">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Роль персонажа</label>
+                                        <input type="text" name="character" class="form-control" placeholder="Имя персонажа">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-film"></i> Обновить фильмографию
+                                    </button>
+                                </form>
+                                <div id="actorDiscographyResult" class="mt-3"></div>
+                            </div>
+
+                            <!-- Удаление актёра -->
+                            <div id="tab-danger" class="tab-pane">
+                                <div class="danger-zone">
+                                    <h3 class="text-danger mb-3">
+                                        <i class="fas fa-exclamation-triangle"></i> Опасная зона
+                                    </h3>
+                                    <p class="mb-3">Удаление актёра необратимо. Все связанные данные также будут удалены.</p>
+                                    <button onclick="deleteActor()" class="btn btn-danger">
+                                        <i class="fas fa-trash"></i> Удалить актёра
+                                    </button>
+                                    <div id="actorDeleteResult" class="mt-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script layout:fragment="scripts" th:inline="javascript">
+        const selectedActorId = /*[[${actorId}]]*/ null;
+        
+        async function loadActors(query) {
+            showLoading('actorsLoading');
+            const url = query ? `/movies/actors?name=${encodeURIComponent(query)}` : '/movies/actors';
+            const res = await apiGet(url);
+            hideLoading('actorsLoading');
+            
+            const grid = document.getElementById('actorsGrid');
+            grid.innerHTML = '';
+            
+            if (res.data && res.data.length > 0) {
+                res.data.forEach(actor => {
+                    const card = document.createElement('div');
+                    card.className = 'card fade-in actor-card';
+                    card.innerHTML = `
+                        <div class="actor-card-inner">
+                            <div class="actor-avatar">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div class="actor-info">
+                                <h3>${actor.name}</h3>
+                                ${actor.birthday ? `<p class="text-muted"><i class="fas fa-birthday-cake"></i> ${actor.birthday}</p>` : ''}
+                                ${actor.biography && actor.biography.length > 100 ? 
+                                  `<p>${actor.biography.substring(0, 100)}...</p>` : 
+                                  actor.biography ? `<p>${actor.biography}</p>` : ''}
+                            </div>
+                            <div class="actor-actions">
+                                <a href="/ui/actors/${actor.id}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-info-circle"></i> Подробнее
+                                </a>
+                                <span class="badge" th:if="${actor.awards}">${actor.awards.length} наград</span>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } else {
+                grid.innerHTML = '<div class="col-12 text-center text-muted">Актёры не найдены</div>';
+            }
+        }
+        
+        async function loadActorDetails(id) {
+            showLoading('actorLoading');
+            try {
+                const [detailRes, rolesRes] = await Promise.all([
+                    apiGet(`/movies/actors/${id}`),
+                    apiGet(`/movies/actors/${id}/movies`)
+                ]);
+                hideLoading('actorLoading');
+                
+                if (detailRes.ok) {
+                    const actor = detailRes.data;
+                    const detailDiv = document.getElementById('actorDetail');
+                    detailDiv.innerHTML = `
+                        <div class="actor-detail-header">
+                            <div class="actor-detail-avatar">
+                                <i class="fas fa-user-circle fa-5x"></i>
+                            </div>
+                            <div class="actor-detail-info">
+                                <h2>${actor.name}</h2>
+                                ${actor.birthday ? `
+                                    <div class="actor-meta">
+                                        <i class="fas fa-birthday-cake"></i>
+                                        <span>Дата рождения: ${actor.birthday}</span>
+                                    </div>` : ''}
+                                ${actor.biography ? `
+                                    <div class="actor-bio">
+                                        <h4><i class="fas fa-book-open"></i> Биография</h4>
+                                        <p>${actor.biography}</p>
+                                    </div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                    const bioForm = document.getElementById('actorBioForm');
+                    if (bioForm) {
+                        bioForm.name.value = actor.name || '';
+                        bioForm.birthday.value = actor.birthday || '';
+                        bioForm.biography.value = actor.biography || '';
+                    }
+                }
+                
+                // Загрузка фильмографии
+                const rolesDiv = document.getElementById('actorRoles');
+                if (rolesRes.ok && rolesRes.data && rolesRes.data.length > 0) {
+                    rolesRes.data.forEach(role => {
+                        const roleItem = document.createElement('div');
+                        roleItem.className = 'role-item';
+                        roleItem.innerHTML = `
+                            <div class="role-movie">${role.movie?.name || 'Неизвестный фильм'}</div>
+                            <div class="role-character">
+                                <i class="fas fa-theater-masks"></i>
+                                ${role.character || 'Роль не указана'}
+                            </div>
+                            ${role.movie?.year ? `<div class="role-year">${role.movie.year}</div>` : ''}
+                        `;
+                        rolesDiv.appendChild(roleItem);
+                    });
+                } else {
+                    rolesDiv.innerHTML = '<p class="text-muted">Фильмография не найдена</p>';
+                }
+                
+                // Загрузка наград
+                const awardsDiv = document.getElementById('actorAwards');
+                const awardsRes = await apiGet(`/movies/actors/${id}`);
+                if (awardsRes.ok && awardsRes.data.awards && awardsRes.data.awards.length > 0) {
+                    awardsRes.data.awards.forEach(award => {
+                        const awardItem = document.createElement('div');
+                        awardItem.className = 'award-item';
+                        awardItem.innerHTML = `
+                            <div class="award-name">
+                                <i class="fas fa-trophy"></i>
+                                ${award.name}
+                            </div>
+                            <div class="award-details">
+                                ${award.awardType ? `<span>${award.awardType}</span>` : ''}
+                                ${award.year ? `<span>${award.year}</span>` : ''}
+                            </div>
+                        `;
+                        awardsDiv.appendChild(awardItem);
+                    });
+                } else {
+                    awardsDiv.innerHTML = '<p class="text-muted">Награды не найдены</p>';
+                }
+                
+            } catch (error) {
+                console.error('Error loading actor details:', error);
+                hideLoading('actorLoading');
+            }
+        }
+        
+        async function createActor(e) {
+            e.preventDefault();
+            const form = e.target;
+            const payload = {
+                name: form.name.value,
+                birthday: form.birthday.value || null,
+                biography: form.biography.value || null,
+                discography: [],
+                awards: []
+            };
+            
+            try {
+                const res = await apiPostJson('/movies/actors', payload);
+                const resultDiv = document.getElementById('actorCreateResult');
+                if (res.ok) {
+                    resultDiv.innerHTML = `<div class="alert alert-success">Актёр успешно создан!</div>`;
+                    form.reset();
+                    loadActors();
+                    setTimeout(() => {
+                        resultDiv.innerHTML = '';
+                        hideCreateForm();
+                    }, 2000);
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-error">Ошибка: ${JSON.stringify(res.data)}</div>`;
+                }
+            } catch (err) {
+                document.getElementById('actorCreateResult').innerHTML = 
+                    `<div class="alert alert-error">Ошибка: ${err.message}</div>`;
+            }
+        }
+        
+        async function updateBiography(e) {
+            e.preventDefault();
+            if (!selectedActorId) return;
+            
+            const f = e.target;
+            const payload = {
+                name: f.name.value,
+                birthday: f.birthday.value || null,
+                biography: f.biography.value || null
+            };
+            const res = await apiPutJson(`/movies/actors/${selectedActorId}/biography`, payload);
+            const resultDiv = document.getElementById('actorBioResult');
+            
+            if (res.ok) {
+                resultDiv.innerHTML = `<div class="alert alert-success">Данные актёра обновлены!</div>`;
+                setTimeout(() => {
+                    resultDiv.innerHTML = '';
+                    loadActorDetails(selectedActorId);
+                }, 2000);
+            } else {
+                resultDiv.innerHTML = `<div class="alert alert-error">Ошибка: ${JSON.stringify(res.data)}</div>`;
+            }
+        }
+        
+        async function updateAwards(e) {
+            e.preventDefault();
+            if (!selectedActorId) return;
+            try {
+                const f = document.getElementById('actorAwardsForm');
+                const award = {
+                    name: f.awardName.value,
+                    awardType: f.awardType.value || null,
+                    awardDescription: f.awardDescription.value || null,
+                    year: f.awardYear.value || null
+                };
+                const payload = { awards: [award] };
+                const res = await apiPutJson(`/movies/actors/${selectedActorId}/awards`, payload);
+                const resultDiv = document.getElementById('actorAwardsResult');
+                if (res.ok) {
+                    resultDiv.innerHTML = `<div class="alert alert-success">Награды обновлены!</div>`;
+                    f.reset();
+                    setTimeout(() => {
+                        resultDiv.innerHTML = '';
+                        loadActorDetails(selectedActorId);
+                    }, 1500);
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-error">Ошибка: ${JSON.stringify(res.data)}</div>`;
+                }
+            } catch (err) {
+                document.getElementById('actorAwardsResult').innerHTML =
+                    `<div class="alert alert-error">Ошибка: ${err.message}</div>`;
+            }
+        }
+        
+        async function updateDiscography(e) {
+            e.preventDefault();
+            if (!selectedActorId) return;
+            try {
+                const f = document.getElementById('actorDiscographyForm');
+                const role = {
+                    movie: {
+                        name: f.movieName.value,
+                        year: f.movieYear.value ? parseInt(f.movieYear.value, 10) : null,
+                        director: f.directorName.value ? { name: f.directorName.value } : null
+                    },
+                    character: f.character.value
+                };
+                const payload = { discography: [role] };
+                const res = await apiPutJson(`/movies/actors/${selectedActorId}/discography`, payload);
+                const resultDiv = document.getElementById('actorDiscographyResult');
+                if (res.ok) {
+                    resultDiv.innerHTML = `<div class="alert alert-success">Фильмография обновлена!</div>`;
+                    f.reset();
+                    setTimeout(() => {
+                        resultDiv.innerHTML = '';
+                        loadActorDetails(selectedActorId);
+                    }, 1500);
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-error">Ошибка: ${JSON.stringify(res.data)}</div>`;
+                }
+            } catch (err) {
+                document.getElementById('actorDiscographyResult').innerHTML =
+                    `<div class="alert alert-error">Ошибка: ${err.message}</div>`;
+            }
+        }
+        
+        async function deleteActor() {
+            if (!selectedActorId || !confirm('Вы уверены, что хотите удалить этого актёра? Это действие нельзя отменить.')) return;
+            
+            const res = await apiDelete(`/movies/actors/${selectedActorId}`);
+            const resultDiv = document.getElementById('actorDeleteResult');
+            
+            if (res.ok) {
+                resultDiv.innerHTML = `<div class="alert alert-success">Актёр успешно удалён!</div>`;
+                setTimeout(() => window.location.href = '/ui/actors', 2000);
+            } else {
+                resultDiv.innerHTML = `<div class="alert alert-error">Ошибка при удалении: ${JSON.stringify(res.data)}</div>`;
+            }
+        }
+        
+        function showCreateForm() {
+            document.getElementById('createForm').style.display = 'block';
+        }
+        
+        function hideCreateForm() {
+            document.getElementById('createForm').style.display = 'none';
+            document.getElementById('actorCreateResult').innerHTML = '';
+        }
+        
+        function showTab(tabName) {
+            // Скрыть все вкладки
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.remove('active');
+            });
+            
+            // Убрать активный класс у всех кнопок
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Показать выбранную вкладку
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            
+            // Активировать соответствующую кнопку
+            document.querySelector(`.tab-btn[onclick="showTab('${tabName}')"]`).classList.add('active');
+        }
+        
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) element.style.display = 'flex';
+        }
+        
+        function hideLoading(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) element.style.display = 'none';
+        }
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            if (selectedActorId) {
+                loadActorDetails(selectedActorId);
+            } else {
+                loadActors();
+                
+                document.getElementById('actorSearchBtn').addEventListener('click', () => {
+                    const query = document.getElementById('actorSearch').value.trim();
+                    loadActors(query || undefined);
+                });
+                
+                document.getElementById('actorRefreshBtn').addEventListener('click', () => {
+                    document.getElementById('actorSearch').value = '';
+                    loadActors();
+                });
+                
+                document.getElementById('actorSearch').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const query = e.target.value.trim();
+                        loadActors(query || undefined);
+                    }
+                });
+            }
+        });
+    </script>
+
+    <style>
+        .actor-card {
+            transition: all 0.3s ease;
+        }
+        
+        .actor-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(74, 105, 189, 0.2);
+        }
+        
+        .actor-card-inner {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .actor-avatar {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        
+        .actor-avatar i {
+            font-size: 3rem;
+            color: #6a89cc;
+        }
+        
+        .actor-info {
+            flex: 1;
+        }
+        
+        .actor-info h3 {
+            color: #4a69bd;
+            margin-bottom: 0.5rem;
+        }
+        
+        .actor-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        
+        .badge {
+            background: linear-gradient(135deg, #82ccdd 0%, #60a3bc 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+        }
+        
+        .actor-detail-header {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+        
+        .actor-detail-avatar {
+            flex-shrink: 0;
+        }
+        
+        .actor-detail-avatar i {
+            color: #6a89cc;
+        }
+        
+        .actor-detail-info {
+            flex: 1;
+        }
+        
+        .actor-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #6a89cc;
+            margin-bottom: 1rem;
+        }
+        
+        .actor-bio {
+            margin-top: 1.5rem;
+        }
+        
+        .roles-list, .awards-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .role-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: #f8faff;
+            border-radius: 8px;
+            border-left: 3px solid #82ccdd;
+        }
+        
+        .role-movie {
+            font-weight: 600;
+            color: #4a69bd;
+        }
+        
+        .role-character {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .role-year {
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 0.25rem;
+        }
+        
+        .award-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: #fffaf0;
+            border-radius: 8px;
+            border-left: 3px solid #ffd700;
+        }
+        
+        .award-name {
+            font-weight: 600;
+            color: #d4a017;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .award-details {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.25rem;
+            font-size: 0.85rem;
+            color: #999;
+        }
+        
+        .tabs {
+            margin-top: 1.5rem;
+        }
+        
+        .tab-buttons {
+            display: flex;
+            border-bottom: 2px solid #e0e7ff;
+            margin-bottom: 1.5rem;
+        }
+        
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            color: #6a89cc;
+            cursor: pointer;
+            font-weight: 600;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-btn:hover {
+            color: #4a69bd;
+        }
+        
+        .tab-btn.active {
+            color: #4a69bd;
+        }
+        
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(135deg, #4a69bd 0%, #6a89cc 100%);
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .tab-pane {
+            display: none;
+            padding: 1.5rem;
+            background: #f8faff;
+            border-radius: 10px;
+        }
+        
+        .tab-pane.active {
+            display: block;
+        }
+        
+        .danger-zone {
+            padding: 1.5rem;
+            background: #fff5f5;
+            border-radius: 10px;
+            border: 2px solid #ffe3e3;
+        }
+    </style>
+</body>
+</html>

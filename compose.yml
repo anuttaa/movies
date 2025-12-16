@@ -7,7 +7,6 @@ services:
       POSTGRES_DB: ${MOVIES_POSTGRES_DB}
     volumes:
       - db_movies:/var/lib/postgresql/data
-      - ./src/main/resources/db/init:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
     networks:
@@ -28,7 +27,22 @@ services:
       movies_database:
         condition: service_started
 
-  # Removed Liquibase service; database will initialize from /docker-entrypoint-initdb.d
+  liquibase-migrations:
+    image: liquibase/liquibase:4.25
+    command:
+      - --changelog-file=classpath:db/changelog/db.changelog-master.yaml
+      - --driver=org.postgresql.Driver
+      - --url=${MOVIES_SPRING_DATASOURCE_URL}
+      - --username=${MOVIES_POSTGRES_USER}
+      - --password=${MOVIES_POSTGRES_PASSWORD}
+      - update
+    depends_on:
+      movies_database:
+        condition: service_started
+    volumes:
+      - ./src/main/resources/db/changelog:/liquibase/changelog
+    networks:
+      - backend
 
 networks:
   backend:
@@ -36,3 +50,4 @@ networks:
 
 volumes:
   db_movies:
+  migrations:

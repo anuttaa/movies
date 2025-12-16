@@ -55,4 +55,12 @@ public class DirectorService {
                 .map(awardMapper::toDto)
                 .toList();
     }
+
+    public DirectorDto updateDirector(int id, DirectorDto directorDto) {
+        Director director = directorRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Director not found with ID: " + id));
+        director.setName(directorDto.name());
+        Director saved = directorRepository.save(director);
+        return directorMapper.toDto(saved);
+    }
 }

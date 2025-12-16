@@ -29,6 +29,7 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final com.example.movies.repositories.MovieRepository movieRepository;
     private final MovieMapper movieMapper;
     private final UserMapper userMapper;
     private final UserProfileMapper userProfileMapper;
@@ -73,6 +74,9 @@ public class UserService {
 
     public UserDto createUser(UserDto userDto) {
         User user = userMapper.toUser(userDto);
+        if (user.getRole() == null) {
+            user.setRole(com.example.movies.model.Role.USER);
+        }
         return userMapper.toDto(userRepository.save(user));
     }
 
@@ -85,13 +89,55 @@ public class UserService {
         //Photo saving
         if (avatar != null && !avatar.isEmpty()) {
             String uniqueFileName = login.substring(0, login.indexOf("@")) + "_" + avatar.getOriginalFilename();
-            user.setAvatar("uploads/avatars/" + uniqueFileName);
+            user.setAvatar("avatars/" + uniqueFileName);
             logger.info("Avatar isn't null, 🌊🔥♨ starting saving photos");
             savePhoto(avatar,uniqueFileName);
         }
 
         user = userRepository.save(user);
         return userProfileMapper.toDto(user);
+    }
+
+    public void deleteUserById(int id) {
+        if (!userRepository.existsById(id)) {
+            throw new ResourceNotFoundException("User not found with ID: " + id);
+        }
+        userRepository.deleteById(id);
+    }
+
+    public List<MovieDto> getFavourites(int userId) {
+        return getUserFavoriteMovies(userId);
+    }
+
+    public List<MovieDto> addFavourite(int userId, int movieId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+        com.example.movies.entities.Movie movie = movieRepository.findById(movieId)
+                .orElseThrow(() -> new ResourceNotFoundException("Movie not found with ID: " + movieId));
+        if (user.getFavourites() == null) {
+            user.setFavourites(new java.util.ArrayList<>());
+        }
+        if (user.getFavourites().stream().noneMatch(m -> m.getId() == movieId)) {
+            user.getFavourites().add(movie);
+        }
+        userRepository.save(user);
+        return user.getFavourites().stream().map(movieMapper::toDto).toList();
+    }
+
+    public List<MovieDto> addFavouriteForLogin(String login, int movieId) {
+        User user = userRepository.findByLogin(login)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with login: " + login));
+        return addFavourite(user.getId(), movieId);
+    }
+
+    public List<MovieDto> removeFavourite(int userId, int movieId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+        if (user.getFavourites() != null) {
+            user.getFavourites().removeIf(m -> m.getId() == movieId);
+        }
+        userRepository.save(user);
+        return user.getFavourites() == null ? java.util.List.of() : user.getFavourites().stream().map(movieMapper::toDto).toList();
     }
 
     private static void savePhoto(MultipartFile avatar, String uniqueFileName) {

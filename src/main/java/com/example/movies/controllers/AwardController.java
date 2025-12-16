@@ -24,7 +24,7 @@ public class AwardController {
         return ResponseEntity.ok(awardService.getAllAwards());
     }
 
-    @GetMapping("/{type}")
+    @GetMapping("/type/{type}")
     public ResponseEntity<List<AwardDto>> getAwardsByType(@PathVariable String type) {
         return ResponseEntity.ok(awardService.getAllAwardsByType(type));
     }

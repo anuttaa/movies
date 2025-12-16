@@ -36,7 +36,7 @@ public class I18nConfig implements WebMvcConfigurer {
     @Bean
     public LocaleResolver localeResolver() {
         AcceptHeaderLocaleResolver resolver = new AcceptHeaderLocaleResolver();
-        resolver.setDefaultLocale(Locale.forLanguageTag("ru"));
+        resolver.setDefaultLocale(Locale.ENGLISH);
         return resolver;
     }
 }

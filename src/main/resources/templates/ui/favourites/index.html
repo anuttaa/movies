@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Избранное - Кинотека</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="page-header">
+            <h1><i class="fas fa-heart"></i> Избранные фильмы</h1>
+            <p class="page-subtitle">Просмотр и управление избранными фильмами пользователя</p>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <input type="number" id="favPageUserId" class="form-control" placeholder="ID пользователя">
+                    <button class="btn btn-primary" onclick="loadFavourites()">
+                        Загрузить избранное
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-list"></i> Список избранных</h2>
+            </div>
+            <div class="card-body">
+                <div id="favouritesList" class="favourites-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script layout:fragment="scripts" th:inline="javascript">
+        async function loadFavourites() {
+            const userId = parseInt(document.getElementById('favPageUserId').value);
+            const list = document.getElementById('favouritesList');
+            list.innerHTML = '';
+            if (!userId) {
+                list.innerHTML = '<div class="text-muted">Укажите ID пользователя</div>';
+                return;
+            }
+            const res = await apiGet(`/movies/users/${userId}/favourites`);
+            if (res.ok && res.data) {
+                if (res.data.length === 0) {
+                    list.innerHTML = '<div class="text-muted">Избранных фильмов нет</div>';
+                    return;
+                }
+                res.data.forEach(m => {
+                    const item = document.createElement('div');
+                    item.className = 'favourite-item';
+                    item.innerHTML = `
+                        <i class="fas fa-video"></i>
+                        <a href="/ui/movies/${m.id}">${m.name}</a>
+                        <button class="btn btn-sm btn-outline" onclick="removeFavourite(${userId}, ${m.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+                    list.appendChild(item);
+                });
+            } else {
+                list.innerHTML = `<div class="alert alert-error">Ошибка: ${JSON.stringify(res.data)}</div>`;
+            }
+        }
+
+        async function removeFavourite(userId, movieId) {
+            const res = await apiDelete(`/movies/users/${userId}/favourites/${movieId}`);
+            if (res.ok) {
+                loadFavourites();
+            }
+        }
+    </script>
+
+    <style>
+        .favourites-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .favourite-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #eef5ff;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            color: #4a69bd;
+        }
+    </style>
+</body>
+</html>

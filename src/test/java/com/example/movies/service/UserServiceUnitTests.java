@@ -93,8 +93,8 @@ public class UserServiceUnitTests {
         user1.setFavourites(movies1);
         user2.setFavourites(movies2);
 
-        userDto1 = new UserDto(1, user1.getName(), user1.getSurname(), moviesDTO1);
-        userDto2 = new UserDto(2, user2.getName(), user2.getSurname(), moviesDTO2);
+        userDto1 = new UserDto(1, user1.getName(), user1.getSurname(), user1.getLogin(), user1.getPassword(), moviesDTO1);
+        userDto2 = new UserDto(2, user2.getName(), user2.getSurname(), user2.getLogin(), user2.getPassword(), moviesDTO2);
 
         userList = new ArrayList<>(List.of(user1, user2));
     }

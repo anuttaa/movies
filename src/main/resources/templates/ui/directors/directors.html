@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Режиссёры - Кинотека</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div th:if="${director == null}">
+            <!-- Главная страница режиссёров -->
+            <div class="page-header">
+                <h1><i class="fas fa-user-tie"></i> Режиссёры</h1>
+                <p class="page-subtitle">База данных режиссёров и их работ</p>
+            </div>
+
+            <!-- Поиск режиссёров -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2><i class="fas fa-search"></i> Поиск режиссёров</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row" style="display: flex; gap: 1rem; align-items: center;">
+                        <div class="col" style="flex: 1;">
+                            <input type="text" 
+                                   id="directorSearch" 
+                                   class="form-control" 
+                                   placeholder="Введите имя режиссёра...">
+                        </div>
+                        <div class="col-auto">
+                            <button id="directorSearchBtn" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Искать
+                            </button>
+                            <button id="directorRefreshBtn" class="btn btn-outline">
+                                <i class="fas fa-redo"></i> Обновить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Список режиссёров -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2><i class="fas fa-list"></i> Список режиссёров</h2>
+                </div>
+                <div class="card-body">
+                    <div class="loading" id="directorsLoading">
+                        <div class="spinner"></div>
+                    </div>
+                    <div class="card-grid" id="directorsGrid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Страница деталей режиссёра -->
+        <div th:if="${director != null}">
+            <div class="page-header">
+                <h1><i class="fas fa-user-tie"></i> Детали режиссёра</h1>
+                <a th:href="@{/ui/directors}" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i> Назад к списку
+                </a>
+            </div>
+
+            <!-- Информация о режиссёре -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="director-header">
+                        <div class="director-avatar">
+                            <i class="fas fa-user-tie fa-5x"></i>
+                        </div>
+                        <div class="director-info">
+                            <h2 th:text="${director.name}">Имя режиссёра</h2>
+                            <div class="director-stats">
+                                <div class="stat-item">
+                                    <i class="fas fa-film"></i>
+                                    <span>Фильмов: <strong th:text="${movies != null ? movies.size() : 0}">0</strong></span>
+                                </div>
+                                <div class="stat-item">
+                                    <i class="fas fa-award"></i>
+                                    <span>Наград: <strong th:text="${awards != null ? awards.size() : 0}">0</strong></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <!-- Фильмы режиссёра -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-video"></i> Фильмография</h2>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${movies != null and not movies.isEmpty()}" class="movies-list">
+                            <div th:each="movie : ${movies}" class="movie-item">
+                                <a th:href="@{|/ui/movies/${movie.id}|}" th:text="${movie.name}"></a>
+                                <div class="movie-meta">
+                                    <span th:text="${movie.year}"></span>
+                                    <span class="rating" th:if="${movie.rate}">
+                                        <i class="fas fa-star"></i> <span th:text="${movie.rate}"></span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${movies == null or movies.isEmpty()}" class="text-center text-muted">
+                            Фильмы не найдены
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Награды режиссёра -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-trophy"></i> Награды</h2>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${awards != null and not awards.isEmpty()}" class="awards-list">
+                            <div th:each="award : ${awards}" class="award-item">
+                                <div class="award-name" th:text="${award.name}"></div>
+                                <div class="award-details">
+                                    <span th:if="${award.awardType}" th:text="${award.awardType}"></span>
+                                    <span th:if="${award.year}" th:text="${award.year}"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${awards == null or awards.isEmpty()}" class="text-center text-muted">
+                            Награды не найдены
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Управление -->
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-edit"></i> Управление</h2>
+                </div>
+                <div class="card-body">
+                    <form id="directorEditForm" class="mb-3">
+                        <div class="form-group">
+                            <label class="form-label">Имя режиссёра</label>
+                            <input type="text" name="name" class="form-control" th:value="${director.name}">
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Сохранить изменения
+                        </button>
+                    </form>
+                    <div id="directorEditResult"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script layout:fragment="scripts" th:inline="javascript">
+        const selectedDirectorId = /*[[${director != null ? director.id : null}]]*/ null;
+        async function loadDirectors(query) {
+            showLoading('directorsLoading');
+            const url = query ? `/movies/directors?name=${encodeURIComponent(query)}` : '/movies/directors';
+            const res = await apiGet(url);
+            hideLoading('directorsLoading');
+            
+            const grid = document.getElementById('directorsGrid');
+            grid.innerHTML = '';
+            
+            if (res.data && res.data.length > 0) {
+                res.data.forEach(director => {
+                    const card = document.createElement('div');
+                    card.className = 'card fade-in director-card';
+                    card.innerHTML = `
+                        <div class="director-card-inner">
+                            <div class="director-avatar">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <div class="director-info">
+                                <h3>${director.name}</h3>
+                            </div>
+                            <div class="director-actions">
+                                <a href="/ui/directors/${director.id}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-info-circle"></i> Подробнее
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            } else {
+                grid.innerHTML = '<div class="col-12 text-center text-muted">Режиссёры не найдены</div>';
+            }
+        }
+        
+        // Инициализация только для списка режиссёров
+        document.addEventListener('DOMContentLoaded', function() {
+            const isList = /*[[${director == null}]]*/ true;
+            if (isList) {
+                loadDirectors();
+                
+                document.getElementById('directorSearchBtn').addEventListener('click', () => {
+                    const query = document.getElementById('directorSearch').value.trim();
+                    loadDirectors(query || undefined);
+                });
+                
+                document.getElementById('directorRefreshBtn').addEventListener('click', () => {
+                    document.getElementById('directorSearch').value = '';
+                    loadDirectors();
+                });
+                
+                document.getElementById('directorSearch').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const query = e.target.value.trim();
+                        loadDirectors(query || undefined);
+                    }
+                });
+            }
+            if (!isList && selectedDirectorId) {
+                const form = document.getElementById('directorEditForm');
+                if (form) {
+                    form.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const payload = { name: form.name.value };
+                        const res = await apiPutJson(`/movies/directors/${selectedDirectorId}`, payload);
+                        const resultDiv = document.getElementById('directorEditResult');
+                        if (res.ok) {
+                            resultDiv.innerHTML = `<div class="alert alert-success">Данные режиссёра обновлены!</div>`;
+                            setTimeout(() => { resultDiv.innerHTML = ''; }, 2000);
+                        } else {
+                            resultDiv.innerHTML = `<div class="alert alert-error">Ошибка: ${JSON.stringify(res.data)}</div>`;
+                        }
+                    });
+                }
+            }
+        });
+        
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) element.style.display = 'flex';
+        }
+        
+        function hideLoading(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) element.style.display = 'none';
+        }
+    </script>
+
+    <style>
+        .director-card {
+            transition: all 0.3s ease;
+        }
+        
+        .director-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(74, 105, 189, 0.2);
+        }
+        
+        .director-card-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            height: 100%;
+            padding: 1.5rem;
+        }
+        
+        .director-avatar {
+            margin-bottom: 1rem;
+        }
+        
+        .director-avatar i {
+            font-size: 3rem;
+            color: #78e08f;
+        }
+        
+        .director-info {
+            flex: 1;
+            margin-bottom: 1rem;
+        }
+        
+        .director-info h3 {
+            color: #4a69bd;
+            margin: 0;
+        }
+        
+        .director-actions {
+            width: 100%;
+        }
+        
+        .director-header {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .director-header .director-avatar i {
+            color: #78e08f;
+        }
+        
+        .director-stats {
+            display: flex;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: #f8faff;
+            border-radius: 10px;
+            color: #6a89cc;
+        }
+        
+        .stat-item i {
+            font-size: 1.2rem;
+        }
+        
+        .stat-item strong {
+            color: #4a69bd;
+            font-size: 1.2rem;
+        }
+        
+        .movies-list, .awards-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .movie-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: #f8faff;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .movie-item:hover {
+            background: #eef5ff;
+            transform: translateX(5px);
+        }
+        
+        .movie-item a {
+            text-decoration: none;
+            color: #4a69bd;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+        
+        .movie-item a:hover {
+            color: #60a3bc;
+        }
+        
+        .movie-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .rating {
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .awards-list .award-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: #fffaf0;
+            border-radius: 8px;
+            border-left: 3px solid #ffd700;
+        }
+        
+        .award-name {
+            font-weight: 600;
+            color: #d4a017;
+        }
+        
+        .award-details {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.25rem;
+            font-size: 0.85rem;
+            color: #999;
+        }
+    </style>
+</body>
+</html>

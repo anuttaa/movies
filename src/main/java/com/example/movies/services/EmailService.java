@@ -3,6 +3,7 @@ package com.example.movies.services;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -21,6 +22,8 @@ public class EmailService {
     private final JavaMailSender mailSender;
     private final MessageSource messageSource;
     private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
+    @Value("${spring.mail.username}")
+    private String fromAddress;
 
     @Autowired
     public EmailService(JavaMailSender mailSender, MessageSource messageSource) {
@@ -49,7 +52,7 @@ public class EmailService {
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(body, true); // Set 'true' to indicate HTML content
-            helper.setFrom("telpuknikifor05@gmail.com");
+            helper.setFrom(fromAddress);
 
             logger.info("Starting email service with HTML content");
             this.mailSender.send(mimeMessage);

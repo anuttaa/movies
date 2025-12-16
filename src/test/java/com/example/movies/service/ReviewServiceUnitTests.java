@@ -54,7 +54,9 @@ public class ReviewServiceUnitTests {
         user.setId(1);
         user.setName("Pavel");
         user.setSurname("Volkov");
-        userDto = new UserDto(1,user.getName(), user.getSurname(), null);
+        user.setLogin("pavel@example.com");
+        user.setPassword("secret");
+        userDto = new UserDto(1, user.getName(), user.getSurname(), user.getLogin(), user.getPassword(), null);
 
         reviews = new ArrayList<>();
         for (int i = 0; i < 1000; i++) {

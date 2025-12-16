@@ -68,7 +68,7 @@ public class MovieServiceUnitTests {
     @BeforeEach
     public void setUp() {
         director = new Director();
-        DirectorDto directorDto = new DirectorDto("Director", List.of(), List.of());
+        DirectorDto directorDto = new DirectorDto(1, "Director", List.of(), List.of());
         movie = new Movie("Inception", 9.0, null, director, "2010-07-16", null, null, 2012,null);
         movieDto = new MovieDto(1,"Inception", null, "new film", 9.0, directorDto, "2010-07-16", List.of(), 2012,null);
         movie.setId(1);
@@ -143,7 +143,7 @@ public class MovieServiceUnitTests {
     void testAddMovieWhenDirectorDoesNotExist() {
 
         Director newDirector = new Director();
-        DirectorDto newDirectorDto = new DirectorDto("new Director", null, null);
+        DirectorDto newDirectorDto = new DirectorDto(0, "new Director", null, null);
         Movie movieWithNewDirector = new Movie("Interstellar", 8.6, null, newDirector, "2014-11-07", null, null, 169,null);
         MovieDto movieDtoWithNewDirector = MovieDto.builder().name("Interstellar").description("Sci-Fi").director(newDirectorDto).build();
 

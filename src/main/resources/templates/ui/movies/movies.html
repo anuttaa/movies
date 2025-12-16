@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Фильмы - Кинотека</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div th:if="${movieId == null}">
+            <!-- Главная страница фильмов -->
+            <div class="page-header">
+                <h1><i class="fas fa-video"></i> Фильмы</h1>
+                <p class="page-subtitle">Управление фильмами в базе данных</p>
+            </div>
+
+            <!-- Поиск фильмов -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2><i class="fas fa-search"></i> Поиск фильмов</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row" style="display: flex; gap: 1rem; align-items: center;">
+                        <div class="col" style="flex: 1;">
+                            <input type="text" 
+                                   id="movieSearch" 
+                                   class="form-control" 
+                                   placeholder="Введите название фильма...">
+                        </div>
+                        <div class="col-auto">
+                            <button id="movieSearchBtn" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Искать
+                            </button>
+                            <button id="movieRefreshBtn" class="btn btn-outline">
+                                <i class="fas fa-redo"></i> Обновить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Список фильмов -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2><i class="fas fa-list"></i> Список фильмов</h2>
+                    <button class="btn btn-primary" onclick="showCreateForm()">
+                        <i class="fas fa-plus"></i> Добавить фильм
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="loading" id="moviesLoading">
+                        <div class="spinner"></div>
+                    </div>
+                    <ul id="moviesList" class="list-group"></ul>
+                </div>
+            </div>
+
+            <!-- Форма создания фильма -->
+            <div class="card mb-4" id="createForm" style="display: none;">
+                <div class="card-header">
+                    <h2><i class="fas fa-plus-circle"></i> Создать новый фильм</h2>
+                </div>
+                <div class="card-body">
+                    <form id="movieCreateForm" onsubmit="createMovie(event)">
+                        <div class="row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Название фильма</label>
+                                <input type="text" name="name" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Год выпуска</label>
+                                <input type="number" name="year" class="form-control" min="1900" max="2100" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Режиссёр</label>
+                            <input type="text" name="directorName" class="form-control" placeholder="Имя режиссёра" required>
+                        </div>
+                        
+                        <div class="row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Рейтинг (0-10)</label>
+                                <input type="number" step="0.1" name="rate" class="form-control" min="0" max="10" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Длительность</label>
+                                <input type="text" name="duration" class="form-control" placeholder="2h 28m">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Жанры (через запятую)</label>
+                            <input type="text" name="genres" class="form-control" placeholder="ACTION, DRAMA, COMEDY">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Описание</label>
+                            <textarea name="description" class="form-control" rows="3"></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Создать фильм
+                            </button>
+                            <button type="button" class="btn btn-outline" onclick="hideCreateForm()">
+                                <i class="fas fa-times"></i> Отмена
+                            </button>
+                        </div>
+                    </form>
+                    <div id="movieCreateResult" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Страница деталей фильма -->
+        <div th:if="${movieId != null}">
+            <div class="page-header">
+                <h1><i class="fas fa-film"></i> Детали фильма</h1>
+                <a th:href="@{/ui/movies}" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i> Назад к списку
+                </a>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="loading" id="movieLoading">
+                        <div class="spinner"></div>
+                    </div>
+                    <div id="movieDetail"></div>
+                </div>
+            </div>
+
+            <div class="row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <!-- Актёры фильма -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-user"></i> Актёры в фильме</h2>
+                    </div>
+                    <div class="card-body">
+                        <ul id="movieActors" class="list-group"></ul>
+                    </div>
+                </div>
+
+                <!-- Управление фильмом -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-edit"></i> Управление</h2>
+                    </div>
+                    <div class="card-body">
+                        <!-- Форма редактирования -->
+                        <form id="movieEditForm" class="mb-4">
+                            <h3 class="mb-3">Редактировать фильм</h3>
+                            <div class="form-group">
+                                <label class="form-label">Название</label>
+                                <input type="text" name="name" class="form-control" placeholder="Введите название">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Описание</label>
+                                <textarea name="description" class="form-control" rows="4" placeholder="Введите описание"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Рейтинг</label>
+                                <input type="number" step="0.1" min="0" max="10" name="rate" class="form-control" placeholder="0–10">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Год</label>
+                                <input type="number" name="year" class="form-control" placeholder="Например, 2024">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Режиссёр</label>
+                                <input type="text" name="directorName" class="form-control" placeholder="Имя режиссёра">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Длительность</label>
+                                <input type="text" name="duration" class="form-control" placeholder="Например, 2ч 10м">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Жанры (через запятую)</label>
+                                <input type="text" name="genres" class="form-control" placeholder="драма, комедия">
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Сохранить изменения
+                            </button>
+                        </form>
+                        <div id="movieEditResult" class="mb-3"></div>
+
+                        <!-- Удаление фильма -->
+                        <div class="danger-zone">
+                            <h3 class="text-danger mb-3"><i class="fas fa-exclamation-triangle"></i> Опасная зона</h3>
+                            <button id="movieDeleteBtn" class="btn btn-danger" onclick="deleteMovie()">
+                                <i class="fas fa-trash"></i> Удалить фильм
+                            </button>
+                            <div id="movieDeleteResult" class="mt-3"></div>
+                        </div>
+                        
+                        <!-- Избранное -->
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h3><i class="fas fa-heart"></i> Добавить в избранное</h3>
+                            </div>
+                            <div class="card-body">
+                                <div style="display:flex; gap:0.5rem; align-items:center;">
+                                    <button class="btn btn-primary" onclick="addMovieToFavourites()">
+                                        Добавить
+                                    </button>
+                                </div>
+                                <div id="movieFavouriteResult" class="mt-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script layout:fragment="scripts" th:inline="javascript">
+        const selectedMovieId = /*[[${movieId}]]*/ null;
+        
+        async function loadMovies(query) {
+            showLoading('moviesLoading');
+            const url = query ? `/movies/movies?name=${encodeURIComponent(query)}` : '/movies/movies';
+            const res = await apiGet(url);
+            hideLoading('moviesLoading');
+            
+            const list = document.getElementById('moviesList');
+            list.innerHTML = '';
+            
+            if (res.data && res.data.length > 0) {
+                res.data.forEach(m => {
+                    const li = document.createElement('li');
+                    li.className = 'list-item fade-in';
+                    li.innerHTML = `
+                        <a href="/ui/movies/${m.id}" style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${m.name}</strong> (${m.year})
+                                <br>
+                                <small class="text-muted">${m.director?.name || 'Режиссёр не указан'}</small>
+                            </div>
+                            <span class="movie-rating">${m.rate}⭐</span>
+                        </a>
+                    `;
+                    list.appendChild(li);
+                });
+            } else {
+                list.innerHTML = '<li class="text-muted text-center">Фильмы не найдены</li>';
+            }
+        }
+        
+        async function loadMovieDetails(id) {
+            showLoading('movieLoading');
+            const [movieRes, actorsRes] = await Promise.all([
+                apiGet(`/movies/movies/${id}`),
+                apiGet(`/movies/movies/${id}/actors`)
+            ]);
+            hideLoading('movieLoading');
+            
+            const detailDiv = document.getElementById('movieDetail');
+            if (movieRes.ok) {
+                const m = movieRes.data;
+                detailDiv.innerHTML = `
+                    <div class="movie-detail-header">
+                        <h2>${m.name} (${m.year})</h2>
+                        <div class="movie-rating-large">${m.rate}⭐</div>
+                    </div>
+                    <div class="movie-meta">
+                        <span class="meta-item"><i class="fas fa-clock"></i> ${m.duration || 'Не указано'}</span>
+                        <span class="meta-item"><i class="fas fa-user-tie"></i> ${m.director?.name || 'Не указан'}</span>
+                        <span class="meta-item"><i class="fas fa-tags"></i> ${(m.genres || []).join(', ')}</span>
+                    </div>
+                    ${m.description ? `<div class="movie-description"><p>${m.description}</p></div>` : ''}
+                `;
+                const editForm = document.getElementById('movieEditForm');
+                if (editForm) {
+                    editForm.name.value = m.name || '';
+                    editForm.description.value = m.description || '';
+                    editForm.rate.value = m.rate != null ? m.rate : '';
+                    editForm.year.value = m.year != null ? m.year : '';
+                    editForm.directorName.value = m.director && m.director.name ? m.director.name : '';
+                    editForm.duration.value = m.duration || '';
+                    editForm.genres.value = (m.genres || []).join(', ');
+                }
+            }
+            
+            const actorsUl = document.getElementById('movieActors');
+            if (actorsRes.ok && actorsRes.data && actorsRes.data.length > 0) {
+                actorsRes.data.forEach(a => {
+                    const li = document.createElement('li');
+                    li.className = 'list-item';
+                    li.innerHTML = `<a href="/ui/actors/${a.id}">${a.name}</a>`;
+                    actorsUl.appendChild(li);
+                });
+            } else {
+                actorsUl.innerHTML = '<li class="text-muted">Актёры не найдены</li>';
+            }
+        }
+        
+        async function addMovieToFavourites() {
+            const resultDiv = document.getElementById('movieFavouriteResult');
+            const res = await apiPostJson(`/movies/users/favourites/${selectedMovieId}`, {});
+            if (res.ok) {
+                resultDiv.innerHTML = `<div class="alert alert-success">Фильм добавлен в избранное!</div>`;
+                setTimeout(() => resultDiv.innerHTML = '', 3000);
+            } else {
+                resultDiv.innerHTML = `<div class="alert alert-error">Ошибка: ${JSON.stringify(res.data)}</div>`;
+            }
+        }
+        
+        async function createMovie(e) {
+            e.preventDefault();
+            const form = e.target;
+            const payload = {
+                name: form.name.value,
+                description: form.description.value,
+                rate: parseFloat(form.rate.value),
+                year: parseInt(form.year.value),
+                director: { name: form.directorName.value },
+                duration: form.duration.value,
+                genres: form.genres.value.split(',').map(g => g.trim()),
+                awards: []
+            };
+            
+            try {
+                const res = await apiPostJson('/movies/movies/add', payload);
+                const resultDiv = document.getElementById('movieCreateResult');
+                if (res.ok) {
+                    resultDiv.innerHTML = `<div class="alert alert-success">Фильм успешно создан!</div>`;
+                    form.reset();
+                    loadMovies();
+                    setTimeout(() => resultDiv.innerHTML = '', 3000);
+                } else {
+                    resultDiv.innerHTML = `<div class="alert alert-error">Ошибка: ${JSON.stringify(res.data)}</div>`;
+                }
+            } catch (err) {
+                document.getElementById('movieCreateResult').innerHTML = 
+                    `<div class="alert alert-error">Ошибка: ${err.message}</div>`;
+            }
+        }
+        
+        async function deleteMovie() {
+            if (!selectedMovieId || !confirm('Вы уверены, что хотите удалить этот фильм?')) return;
+            
+            const res = await apiDelete(`/movies/movies/${selectedMovieId}`);
+            const resultDiv = document.getElementById('movieDeleteResult');
+            
+            if (res.ok) {
+                resultDiv.innerHTML = `<div class="alert alert-success">Фильм успешно удалён!</div>`;
+                setTimeout(() => window.location.href = '/ui/movies', 2000);
+            } else {
+                resultDiv.innerHTML = `<div class="alert alert-error">Ошибка при удалении: ${JSON.stringify(res.data)}</div>`;
+            }
+        }
+        
+        function showCreateForm() {
+            document.getElementById('createForm').style.display = 'block';
+        }
+        
+        function hideCreateForm() {
+            document.getElementById('createForm').style.display = 'none';
+            document.getElementById('movieCreateResult').innerHTML = '';
+        }
+        
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) element.style.display = 'flex';
+        }
+        
+        function hideLoading(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) element.style.display = 'none';
+        }
+        
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            if (selectedMovieId) {
+                loadMovieDetails(selectedMovieId);
+            } else {
+                loadMovies();
+                
+                document.getElementById('movieSearchBtn').addEventListener('click', () => {
+                    const query = document.getElementById('movieSearch').value.trim();
+                    loadMovies(query || undefined);
+                });
+                
+                document.getElementById('movieRefreshBtn').addEventListener('click', () => {
+                    document.getElementById('movieSearch').value = '';
+                    loadMovies();
+                });
+                
+                document.getElementById('movieSearch').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const query = e.target.value.trim();
+                        loadMovies(query || undefined);
+                    }
+                });
+            }
+            
+            const formEl = document.getElementById('movieEditForm');
+            if (formEl) {
+                formEl.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const f = e.target;
+                    const payload = {
+                        name: f.name.value,
+                        description: f.description.value,
+                        rate: f.rate.value ? parseFloat(f.rate.value) : null,
+                        year: f.year.value ? parseInt(f.year.value) : null,
+                        director: f.directorName.value ? { name: f.directorName.value } : null,
+                        duration: f.duration.value || null,
+                        genres: f.genres.value ? f.genres.value.split(',').map(g => g.trim()).filter(Boolean) : []
+                    };
+                    const res = await apiPutJson(`/movies/movies/${selectedMovieId}`, payload);
+                    const resultDiv = document.getElementById('movieEditResult');
+                    if (res.ok) {
+                        resultDiv.innerHTML = `<div class="alert alert-success">Фильм успешно обновлён!</div>`;
+                        if (selectedMovieId) {
+                            loadMovieDetails(selectedMovieId);
+                        }
+                        setTimeout(() => resultDiv.innerHTML = '', 3000);
+                    } else {
+                        resultDiv.innerHTML = `<div class="alert alert-error">Ошибка: ${JSON.stringify(res.data)}</div>`;
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

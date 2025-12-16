@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Поиск - Кинотека</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="page-header">
+            <h1><i class="fas fa-search"></i> Поиск по базе</h1>
+            <p class="page-subtitle">Найдите фильмы, актёров и режиссёров</p>
+        </div>
+
+        <!-- Форма поиска -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="get" action="/ui/search" class="search-form">
+                    <div class="search-box-large">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" 
+                               name="name" 
+                               th:value="${query}" 
+                               placeholder="Введите название фильма, имя актёра или режиссёра..." 
+                               class="search-input-large"
+                               required>
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-search"></i> Поиск
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Результаты поиска -->
+        <div th:if="${query != null}">
+            <!-- Фильмы -->
+            <div class="card mb-4" th:if="${movies != null and not movies.isEmpty()}">
+                <div class="card-header">
+                    <h2><i class="fas fa-video"></i> Найденные фильмы</h2>
+                </div>
+                <div class="card-body">
+                    <div class="card-grid">
+                        <div th:each="movie : ${movies}" class="card">
+                            <div class="movie-card">
+                                <h3 th:text="${movie.name}"></h3>
+                                <p class="text-muted mb-2" th:text="${movie.year}"></p>
+                                <p th:text="${movie.description != null && movie.description.length() > 100 ? 
+                                           movie.description.substring(0, 100) + '...' : movie.description}"></p>
+                                <div class="movie-footer">
+                                    <a th:href="@{|/ui/movies/${movie.id}|}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-info-circle"></i> Подробнее
+                                    </a>
+                                    <span class="movie-rating" th:text="${movie.rate} + '⭐'"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Актёры -->
+            <div class="card mb-4" th:if="${actors != null and not actors.isEmpty()}">
+                <div class="card-header">
+                    <h2><i class="fas fa-user"></i> Найденные актёры</h2>
+                </div>
+                <div class="card-body">
+                    <div class="card-grid">
+                        <div th:each="actor : ${actors}" class="card">
+                            <div class="actor-card">
+                                <h3 th:text="${actor.name}"></h3>
+                                <p class="text-muted mb-2" th:text="${actor.birthday}"></p>
+                                <p th:text="${actor.biography != null && actor.biography.length() > 100 ? 
+                                           actor.biography.substring(0, 100) + '...' : actor.biography}"></p>
+                                <div class="actor-footer">
+                                    <a th:href="@{|/ui/actors/${actor.id}|}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-info-circle"></i> Подробнее
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Режиссёры -->
+            <div class="card mb-4" th:if="${directors != null and not directors.isEmpty()}">
+                <div class="card-header">
+                    <h2><i class="fas fa-user-tie"></i> Найденные режиссёры</h2>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        <li th:each="director : ${directors}" class="list-item">
+                            <a th:href="@{|/ui/directors/${director.id}|}" th:text="${director.name}"></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Если ничего не найдено -->
+            <div th:if="${(movies == null or movies.isEmpty()) and 
+                          (actors == null or actors.isEmpty()) and 
+                          (directors == null or directors.isEmpty())}">
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle fa-2x mb-3"></i>
+                    <h3>Ничего не найдено</h3>
+                    <p>Попробуйте изменить поисковый запрос</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Советы по поиску -->
+        <div th:if="${query == null}" class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-lightbulb"></i> Советы по поиску</h2>
+            </div>
+            <div class="card-body">
+                <div class="tips-grid">
+                    <div class="tip-item">
+                        <i class="fas fa-video tip-icon"></i>
+                        <h3>Поиск фильмов</h3>
+                        <p>Введите название фильма или часть названия</p>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-user tip-icon"></i>
+                        <h3>Поиск актёров</h3>
+                        <p>Введите имя или фамилию актёра</p>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-user-tie tip-icon"></i>
+                        <h3>Поиск режиссёров</h3>
+                        <p>Введите имя режиссёра</p>
+                    </div>
+                    <div class="tip-item">
+                        <i class="fas fa-star tip-icon"></i>
+                        <h3>Расширенный поиск</h3>
+                        <p>Используйте английские названия для лучших результатов</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .search-box-large {
+            position: relative;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .search-input-large {
+            flex: 1;
+            padding: 1rem 1.5rem 1rem 3rem;
+            border: 2px solid #e0e7ff;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            background: white;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input-large:focus {
+            outline: none;
+            border-color: #82ccdd;
+            box-shadow: 0 0 0 3px rgba(130, 204, 221, 0.2);
+        }
+        
+        .tips-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .tip-item {
+            text-align: center;
+            padding: 1.5rem;
+            background: #f8faff;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+        
+        .tip-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .tip-icon {
+            font-size: 2rem;
+            color: #6a89cc;
+            margin-bottom: 1rem;
+        }
+        
+        .movie-card, .actor-card {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .movie-footer, .actor-footer {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .movie-rating-large {
+            font-size: 2rem;
+            color: #ffd700;
+            font-weight: bold;
+        }
+        
+        .movie-meta {
+            display: flex;
+            gap: 1.5rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #6a89cc;
+        }
+        
+        .movie-description {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f8faff;
+            border-radius: 10px;
+        }
+        
+        .danger-zone {
+            padding: 1.5rem;
+            background: #fff5f5;
+            border-radius: 10px;
+            border: 2px solid #ffe3e3;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+    </style>
+</body>
+</html>

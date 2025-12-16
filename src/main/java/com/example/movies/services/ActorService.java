@@ -14,6 +14,7 @@ import com.example.movies.mappers.RoleMapper;
 import com.example.movies.repositories.*;
 import com.example.movies.repositories.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ActorService {
 
@@ -62,6 +64,7 @@ public class ActorService {
     }
 
     public ActorDto saveActor(ActorDto actorDto) {
+        log.info("Saving actor: name={}, birthday={}", actorDto.name(), actorDto.birthday());
         if (actorRepository.findByNameAndBirthday(actorDto.name(), actorDto.birthday()) != null) {
             throw new DataIntegrityViolationException(
                     "Actor with name "
@@ -74,7 +77,8 @@ public class ActorService {
         Actor actor = actorMapper.toActor(actorDto);
         Actor savedActor = actorRepository.save(actor);
 
-        if (actorDto.discography() != null) {
+        if (actorDto.discography() != null && !actorDto.discography().isEmpty()) {
+            log.info("Saving initial discography entries: count={}", actorDto.discography().size());
             for (RoleDto roleDto : actorDto.discography()) {
                 Movie movie = movieRepository.findMovieByNameAndYear(roleDto.movie().name(), roleDto.movie().year());
                 if (movie == null) {
@@ -88,11 +92,14 @@ public class ActorService {
                 role.setCharacter(roleDto.character());
                 roleRepository.save(role);
             }
+        } else {
+            log.info("No initial discography provided for actor {}", savedActor.getId());
         }
         return actorMapper.toDto(savedActor);
     }
 
     public ActorDto updateActor(int id, ActorDto actorDto) {
+        log.info("Updating actor {}: name={}, birthday={}, biography={}", id, actorDto.name(), actorDto.birthday(), actorDto.biography());
         Optional<Actor> actorOptional = actorRepository.findById(id);
         if (actorOptional.isPresent()) {
             Actor actor = actorOptional.get();
@@ -101,20 +108,28 @@ public class ActorService {
             actor.setBiography(actorDto.biography());
             actor.setBirthday(actorDto.birthday());
 
-            Set<Role> roles = new HashSet<>();
-            for (RoleDto roleDto : actorDto.discography()) {
-                Role role = roleMapper.toRole(roleDto);
-                if (roleRepository.findByActorIdAndMovieId(role.getActor().getId(), role.getMovie().getId()).isPresent()) {
-                    roles.add(role);
-                } else {
-                    roleRepository.save(role);
-                    roles.add(role);
+            if (actorDto.discography() != null && !actorDto.discography().isEmpty()) {
+                log.info("Updating actor {} discography via PUT /actors/{{id}}: entries={}", id, actorDto.discography().size());
+                Set<Role> roles = new HashSet<>();
+                for (RoleDto roleDto : actorDto.discography()) {
+                    Role role = roleMapper.toRole(roleDto);
+                    if (role.getActor() == null) {
+                        role.setActor(actor);
+                    }
+                    if (role.getMovie() != null && roleRepository.findByActorIdAndMovieId(actor.getId(), role.getMovie().getId()).isPresent()) {
+                        roles.add(role);
+                    } else {
+                        roleRepository.save(role);
+                        roles.add(role);
+                    }
                 }
+                actor.setDiscography(roles);
+            } else {
+                log.info("No discography changes provided for actor {}", id);
             }
-            actor.setDiscography(roles);
             actorRepository.save(actor);
 
-            return actorDto;
+            return actorMapper.toDto(actor);
 
         } else {
             throw new IllegalArgumentException("Actor with ID " + id + " not found.");
@@ -163,6 +178,7 @@ public class ActorService {
     }
 
     public ActorDto updateActorBiography(int id, ActorDto actorDTO) {
+        log.info("Updating actor biography {}: name={}, birthday={}, biography={}", id, actorDTO.name(), actorDTO.birthday(), actorDTO.biography());
         Actor actor = getById(id);
 
         if (actorDTO.name() != null) {
@@ -180,20 +196,32 @@ public class ActorService {
     }
 
     public ActorDto updateActorAwards(int id, ActorDto actorDTO) {
+        log.info("Updating actor awards {}: incomingAwardsCount={}", id, actorDTO.awards() != null ? actorDTO.awards().size() : 0);
         Actor actor = getById(id);
-        List<Award> awardList = actorDTO.awards().stream().map(awardMapper::toAward).toList();
-        actor.getAwards().addAll(awardList);
-        awardRepository.saveAll(awardList);
+        if (actorDTO.awards() != null && !actorDTO.awards().isEmpty()) {
+            List<Award> awardList = actorDTO.awards().stream().map(awardMapper::toAward).toList();
+            actor.getAwards().addAll(awardList);
+            awardRepository.saveAll(awardList);
+        } else {
+            log.info("No awards provided to update for actor {}", id);
+        }
         return actorMapper.toDto(actorRepository.save(actor));
     }
 
     public ActorDto updateActorDiscography(int id, ActorDto actorDTO) {
+        log.info("Updating actor discography {}: incomingRolesCount={}", id, actorDTO.discography() != null ? actorDTO.discography().size() : 0);
         Actor actor = getById(id);
 
+        if (actorDTO.discography() == null || actorDTO.discography().isEmpty()) {
+            log.info("No discography entries provided for actor {}", id);
+            return actorMapper.toDto(actor);
+        }
+
         Map<Movie, String> movieList = actorDTO.discography().stream()
+                .filter(roleDTO -> roleDTO.movie() != null && roleDTO.movie().name() != null)
                 .collect(Collectors.toMap(
-                        roleDTO -> movieMapper.toMovie(roleDTO.movie()), // Map the movie DTO to the Movie entity
-                        RoleDto::character // Get the associated character for each movie
+                        roleDTO -> movieMapper.toMovie(roleDTO.movie()),
+                        RoleDto::character
                 ));
         Role role;
         List<Role> roles = new ArrayList<>();
@@ -202,14 +230,18 @@ public class ActorService {
             findMovie = movieRepository.findMovieByNameAndYear(movie.getKey().getName(), movie.getKey().getYear());
             if (findMovie == null) {
                 Director director = movie.getKey().getDirector();
-                Optional<Director> findDirector = directorRepository.findDirectorByName(director.getName());
-                if (findDirector.isEmpty()) {
-                    directorRepository.save(director);
-                } else {
-                    movie.getKey().setDirector(findDirector.get());
+                if (director != null && director.getName() != null && !director.getName().isBlank()) {
+                    Optional<Director> findDirector = directorRepository.findDirectorByName(director.getName());
+                    if (findDirector.isEmpty()) {
+                        directorRepository.save(director);
+                        log.info("Saved new director '{}'", director.getName());
+                    } else {
+                        movie.getKey().setDirector(findDirector.get());
+                    }
                 }
                 movieRepository.save(movie.getKey());
                 findMovie = movie.getKey();
+                log.info("Saved new movie '{}', year={}", findMovie.getName(), findMovie.getYear());
             }
             role = new Role();
 
@@ -218,6 +250,7 @@ public class ActorService {
             role.setCharacter(movie.getValue());
             roleRepository.save(role);
             roles.add(role);
+            log.info("Linked actor {} to movie '{}' with character '{}'", actor.getId(), findMovie.getName(), movie.getValue());
         }
         actor.getDiscography().addAll(roles);
         return actorMapper.toDto(actorRepository.save(actor));

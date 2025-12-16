@@ -1,6 +1,7 @@
 package com.example.movies.controllers;
 
 import com.example.movies.dtos.UserProfileDto;
+import com.example.movies.dtos.MovieDto;
 import com.example.movies.logging.LogExecutionTime;
 import com.example.movies.dtos.UserDto;
 import com.example.movies.services.UserService;
@@ -39,11 +40,16 @@ public class UserController {
     }
 
     @PostMapping("/add")
-    @PreAuthorize("hasAuthority('CREATE')")
     @LogExecutionTime
     public ResponseEntity<UserDto> createUser(@RequestBody UserDto userDto) {
         UserDto savedUser = userService.createUser(userDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable int id) {
+        userService.deleteUserById(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/profile/{id}")
@@ -56,5 +62,29 @@ public class UserController {
             @ModelAttribute UserDto userDto,
             @RequestParam(value = "avatar", required = false) MultipartFile avatar) {
          return ResponseEntity.ok(userService.updateUser(userDto,avatar));
+    }
+
+    @GetMapping("/{id}/favourites")
+    public ResponseEntity<List<MovieDto>> getFavourites(@PathVariable int id) {
+        return ResponseEntity.ok(userService.getFavourites(id));
+    }
+
+    @PostMapping("/{id}/favourites/{movieId}")
+    public ResponseEntity<List<MovieDto>> addFavourite(@PathVariable int id, @PathVariable int movieId) {
+        return ResponseEntity.ok(userService.addFavourite(id, movieId));
+    }
+
+    @PostMapping("/favourites/{movieId}")
+    public ResponseEntity<List<MovieDto>> addFavouriteForCurrent(@PathVariable int movieId, org.springframework.security.core.Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String login = authentication.getName();
+        return ResponseEntity.ok(userService.addFavouriteForLogin(login, movieId));
+    }
+
+    @DeleteMapping("/{id}/favourites/{movieId}")
+    public ResponseEntity<List<MovieDto>> removeFavourite(@PathVariable int id, @PathVariable int movieId) {
+        return ResponseEntity.ok(userService.removeFavourite(id, movieId));
     }
 }

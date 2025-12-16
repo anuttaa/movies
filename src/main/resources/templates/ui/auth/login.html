@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+<head>
+    <title>Вход - Кинотека</title>
+</head>
+<body>
+    <div layout:fragment="content">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h1><i class="fas fa-sign-in-alt"></i> Вход в систему</h1>
+                    <p class="auth-subtitle">Войдите в свой аккаунт Кинотеки</p>
+                </div>
+                
+                <form id="loginForm" class="auth-form">
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-envelope"></i> Email адрес</label>
+                        <input type="email" 
+                               name="login" 
+                               class="form-control" 
+                               placeholder="Введите ваш email"
+                               required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-lock"></i> Пароль</label>
+                        <input type="password" 
+                               name="password" 
+                               class="form-control" 
+                               placeholder="Введите ваш пароль"
+                               required>
+                    </div>
+                    
+                    <div class="form-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="remember">
+                            <span>Запомнить меня</span>
+                        </label>
+                        <a href="#" class="forgot-link">Забыли пароль?</a>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i class="fas fa-sign-in-alt"></i> Войти
+                    </button>
+                    
+                    <div class="auth-divider">
+                        <span>ИЛИ</span>
+                    </div>
+                    
+                    <div class="auth-footer">
+                        <p>Нет аккаунта? <a th:href="@{/ui/auth/register}">Зарегистрируйтесь</a></p>
+                    </div>
+                </form>
+                
+                <div id="loginResult" class="auth-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script layout:fragment="scripts">
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const payload = { 
+                login: form.login.value, 
+                password: form.password.value 
+            };
+            
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+            
+            const res = await apiPostJson('/movies/auth/login', payload);
+            
+            if (res.ok && res.data && res.data.accessToken) {
+                localStorage.setItem('jwt', res.data.accessToken);
+                resultDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> Успешный вход! Перенаправление...
+                    </div>
+                `;
+                setTimeout(() => window.location.href = '/', 2000);
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i> Ошибка входа: ${res.data?.message || 'Неверные данные'}
+                    </div>
+                `;
+            }
+        });
+    </script>
+
+    <style>
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 70vh;
+        }
+        
+        .auth-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 40px rgba(74, 105, 189, 0.15);
+            width: 100%;
+            max-width: 450px;
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .auth-subtitle {
+            color: #6a89cc;
+            margin-top: 0.5rem;
+        }
+        
+        .auth-form {
+            margin-bottom: 1.5rem;
+        }
+        
+        .btn-block {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.1rem;
+        }
+        
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .forgot-link {
+            color: #6a89cc;
+            text-decoration: none;
+        }
+        
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+        
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            margin: 1.5rem 0;
+            color: #6a89cc;
+        }
+        
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e0e7ff;
+        }
+        
+        .auth-divider span {
+            padding: 0 1rem;
+        }
+        
+        .auth-footer {
+            text-align: center;
+            color: #6a89cc;
+        }
+        
+        .auth-footer a {
+            color: #4a69bd;
+            font-weight: 600;
+            text-decoration: none;
+        }
+        
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .auth-result {
+            margin-top: 1.5rem;
+        }
+    </style>
+</body>
+</html>

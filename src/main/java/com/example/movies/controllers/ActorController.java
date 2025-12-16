@@ -49,7 +49,6 @@ public class ActorController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('CREATE')")
     public ResponseEntity<ActorDto> createActor(@RequestBody ActorDto actorDto) {
         ActorDto savedActor = actorService.saveActor(actorDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedActor);
@@ -61,7 +60,6 @@ public class ActorController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('DELETE')")
     public ResponseEntity<Void> deleteActor(@PathVariable int id) {
         actorService.deleteActorById(id);
         return ResponseEntity.noContent().build();
@@ -69,21 +67,18 @@ public class ActorController {
 
 
     @PutMapping("/{id}/biography")
-    @PreAuthorize("hasAuthority('UPDATE')")
     public ResponseEntity<ActorDto> updateActorBiography(@PathVariable int id, @RequestBody ActorDto actorDto) {
         return ResponseEntity.ok(actorService.updateActorBiography(id, actorDto));
     }
 
     // Update awards
     @PutMapping("/{id}/awards")
-    @PreAuthorize("hasAuthority('UPDATE')")
     public ResponseEntity<ActorDto> updateActorAwards(@PathVariable int id, @RequestBody ActorDto actorDto) {
         return ResponseEntity.ok(actorService.updateActorAwards(id, actorDto));
     }
 
     // Update discography
     @PutMapping("/{id}/discography")
-    @PreAuthorize("hasAuthority('UPDATE')")
     public ResponseEntity<ActorDto> updateActorDiscography(@PathVariable int id, @RequestBody ActorDto actorDto) {
         return ResponseEntity.ok(actorService.updateActorDiscography(id, actorDto));
     }

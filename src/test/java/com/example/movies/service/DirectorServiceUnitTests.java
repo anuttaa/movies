@@ -80,8 +80,8 @@ public class DirectorServiceUnitTests {
         director1.setMovies(movieList1);
         director2.setMovies(movieList2);
 
-        directorDto1 = new DirectorDto(director1.getName(), null, movieDtoList1);
-        directorDto2 = new DirectorDto(director2.getName(), null, movieDtoList2);
+        directorDto1 = new DirectorDto(director1.getId(), director1.getName(), null, movieDtoList1);
+        directorDto2 = new DirectorDto(director2.getId(), director2.getName(), null, movieDtoList2);
     }
 
     @Test
@@ -123,7 +123,7 @@ public class DirectorServiceUnitTests {
         }
         when(directorRepository.findByNameContainingIgnoreCase(name)).thenReturn(directors);
         lenient().when(directorMapper.toDto(any(Director.class)))
-                .thenReturn(new DirectorDto("Nikifor", null, null));
+                .thenReturn(new DirectorDto(0, "Nikifor", null, null));
 
         List<DirectorDto> result = directorService.getDirectorsByName(name);
 

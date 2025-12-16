@@ -9,6 +9,8 @@ public record UserDto(
         int id,
         String name,
         String surname,
+        String login,
+        String password,
         List<MovieDto> favourites
 ) {
 }

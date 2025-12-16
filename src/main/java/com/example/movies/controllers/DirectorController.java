@@ -31,5 +31,10 @@ public class DirectorController {
     public ResponseEntity<DirectorDto> getDirectorById(@PathVariable int id) {
         return ResponseEntity.ok(directorService.getDirectorById(id));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<DirectorDto> updateDirectorById(@PathVariable int id, @RequestBody DirectorDto directorDto) {
+        return ResponseEntity.ok(directorService.updateDirector(id, directorDto));
+    }
 }
 

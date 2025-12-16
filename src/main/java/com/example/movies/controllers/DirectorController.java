@@ -12,7 +12,6 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/movies/directors")
-@CrossOrigin(origins = "http://localhost:3000")
 public class DirectorController {
     private final DirectorService directorService;
 

@@ -19,7 +19,6 @@ import java.nio.file.Paths;
 
 @RestController
 @RequestMapping("/uploads")
-@CrossOrigin(origins = "http://localhost:3000")
 public class ImagesController {
 
     private static final Logger logger = LoggerFactory.getLogger(EmailService.class);

@@ -14,7 +14,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/movies/search")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
 public class SearchController {
 
     private final ActorService actorService;

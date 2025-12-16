@@ -12,7 +12,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/movies/awards")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
 public class AwardController {
 
     private final AwardService awardService;

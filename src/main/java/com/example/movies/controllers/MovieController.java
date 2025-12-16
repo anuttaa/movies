@@ -16,7 +16,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/movies/movies")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
 @Slf4j
 public class MovieController {
 

@@ -8,7 +8,6 @@ public record UserProfileDto (
         String surname,
         String login,
         String avatar,
-        List<MovieDto> favourites,
-        List<ChatDto> chats
+        List<MovieDto> favourites
 ){
 }

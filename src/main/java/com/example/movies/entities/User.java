@@ -16,7 +16,6 @@ import lombok.ToString;
 
 import java.util.List;
 
-
 @Entity
 @Table(name = "users")
 @AttributeOverride(name = "id", column = @Column(name = "user_id"))
@@ -41,12 +40,4 @@ public class User extends Person {
             inverseJoinColumns = @JoinColumn(name = "movie_id")
     )
     private List<Movie> favourites;
-
-    @ManyToMany
-    @JoinTable(
-            name = "chats_users",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "chat_id")
-    )
-    private List<Chat> chats;
 }

@@ -1,6 +1,5 @@
 package com.example.movies.repositories;
 
-import com.example.movies.entities.Chat;
 import com.example.movies.entities.Movie;
 import com.example.movies.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,10 +20,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     @Transactional(readOnly = true)
     @Query("SELECT u.favourites FROM User u WHERE u.id = :userId")
     List<Movie> findFavouriteMoviesByUserId(@Param("userId") int userId);
-
-    @Transactional(readOnly = true)
-    @Query("select u.chats from User u where u.login = :sender_login")
-    List<Chat> getChatsByUserLogin(@Param("sender_login") String userLogin);
 
     Optional<User> findByLogin(String login);
 }

@@ -4,13 +4,20 @@ services:
     environment:
       POSTGRES_USER: ${MOVIES_POSTGRES_USER}
       POSTGRES_PASSWORD: ${MOVIES_POSTGRES_PASSWORD}
-      POSTGRES_DB: ${MOVIES_POSTGRES_DB}
+      POSTGRES_DB: ${MOVIES_POSTGRES_DB:-movies}
     volumes:
       - db_movies:/var/lib/postgresql/data
+      - "D:\\winter3\\movie_project\\movie_project\\Movies\\src\\main\\resources\\db\\init\\movies_db.sql:/docker-entrypoint-initdb.d/movies_db.sql"
     ports:
       - "5432:5432"
     networks:
       - backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${MOVIES_POSTGRES_USER:-postgres} -d ${MOVIES_POSTGRES_DB:-movies}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   movies-service:
     build: .
@@ -21,33 +28,16 @@ services:
       MOVIES_POSTGRES_USER: ${MOVIES_POSTGRES_USER}
       MOVIES_POSTGRES_PASSWORD: ${MOVIES_POSTGRES_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
+      DB_CLEANUP_ENABLED: "true"
     networks:
       - backend
+    restart: unless-stopped
     depends_on:
       movies_database:
-        condition: service_started
-
-  liquibase-migrations:
-    image: liquibase/liquibase:4.25
-    command:
-      - --changelog-file=classpath:db/changelog/db.changelog-master.yaml
-      - --driver=org.postgresql.Driver
-      - --url=${MOVIES_SPRING_DATASOURCE_URL}
-      - --username=${MOVIES_POSTGRES_USER}
-      - --password=${MOVIES_POSTGRES_PASSWORD}
-      - update
-    depends_on:
-      movies_database:
-        condition: service_started
-    volumes:
-      - ./src/main/resources/db/changelog:/liquibase/changelog
-    networks:
-      - backend
+        condition: service_healthy
 
 networks:
   backend:
-  movies_network:
 
 volumes:
   db_movies:
-  migrations:

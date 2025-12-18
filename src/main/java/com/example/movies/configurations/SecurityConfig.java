@@ -64,11 +64,11 @@ public class SecurityConfig {
                 ).userDetailsService(customUserDetailsService)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))  // 401 for unauthorized access
-                        .accessDeniedHandler(accessDeniedHandler())  // Custom handler for forbidden access (403)
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))  
+                        .accessDeniedHandler(accessDeniedHandler()) 
                 )
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class) //AuthorizationFilter
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class) 
                 .logout(l -> l.logoutUrl("/movies/logout")
                         .addLogoutHandler(logoutHandler)
                         .logoutSuccessHandler(logoutSuccessHandler())

@@ -10,8 +10,8 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
@@ -46,10 +46,6 @@ spring:
       max-file-size: 10MB   # Set maximum file size for uploads
       max-request-size: 10MB # Set maximum request size for uploads
       enabled: true
-
-  liquibase:
-    enabled: false
-    clear-checksums: true
 
 server:
   port: 8080
